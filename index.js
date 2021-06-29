@@ -1,177 +1,197 @@
-// Importing modules & packages
+// Importing modules & packages (Express, Morgan, Bodyparser, UUID, Mongoose, Models)
 const express = require('express');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const uuid = require('uuid');
 const app = express();
+const mongoose = require('mongoose');
+const Models = require('./models.js');
+
+// Requiring Mongoose package and models.js file
+const Movies = Models.Movie;
+const Users = Models.User;
+const Directors = Models.Director;
+const Genres = Models.Genre;
+
+
+//Connecting Moongoose to MongoDB external database as a sublayer
+mongoose.connect('mongodb://localhost:27017/myFlixDB', {useNewUrlParser: true, useUnifiedTopology: true});
 
 app.use(morgan('common'));
 app.use(bodyParser.json());
 
-// List of movies
-let movies = [
-  {
-    id: 1,
-    title: 'A Moment to Remember',
-    genre: 'Drama',
-    imageUrl: '',
-    director: 'John H. Lee'
-  },
-  {
-    id: 2,
-    title: 'Hanyo',
-    genre: 'Thriller',
-    imageUrl: '',
-    director: 'Im Sang-soo'
-  },
-  {
-    id: 3,
-    title: 'Parasite',
-    genre: 'Drama',
-    imageUrl: '',
-    director: 'Bong Joon-ho'
-  },
-  {
-    id: 4,
-    title: 'Bittersweet Life',
-    genre: 'Action',
-    imageUrl: '',
-    director: 'Kim Jee-won'
-  },
-  {
-    id: 5,
-    title: 'Addicted',
-    genre: 'Thriller',
-    imageUrl: '',
-    director: 'Park Young-hoon'
-  },
-  {
-    id: 6,
-    title: 'Night in Paradise',
-    genre: 'Crime-Drama',
-    imageUrl: '',
-    director: 'Park Hoon-jung'
-  },
-  {
-    id: 7,
-    title: 'Daisy',
-    genre: 'Melodrama',
-    imageUrl: '',
-    director: 'Lau Wai Keung'
-  },
-  {
-    id: 8,
-    title: 'Be With You',
-    genre: 'Romance',
-    imageUrl: '',
-    director: 'Lee Jang-hoon'
-  },
-  {
-    id: 9,
-    title: 'The Man from Nowhere',
-    genre: 'Action-Thriller',
-    imageUrl: '',
-    director: 'Lee Jeong-beom'
-  },
-  {
-    id: 10,
-    title: 'My Father',
-    genre: 'Drama',
-    imageUrl: '',
-    director: 'Hwang Dong-hyuk',
 
-
-  }
-];
-
-// Gets access to the root file
+// Returns the welcome message from the root file
 app.get('/', (req, res) => {
-  res.send('Welcome to my top 10 movies club!');
+  res.send('Welcome to my K-Movies filmstream!');
 });
-// Gets information about the webserver API project
+
+// Returns the documentation.html file for building this API
 app.get('/documentation.html', (req, res) => {
   res.sendFile('public/documentation.html', { root: __dirname });
 });
-// Gets the list of movies
+
+// Gets all movies
 app.get('/movies', (req, res) => {
-  res.json(movies);
-});
-// Gets data about a single movie by title
-app.get('/movies/:title', (req, res) => {
-  res.json(movies.find((movie) =>
-    { return movie.title === req.params.title }));
-});
-// Gets data about a genre by name/title
-app.get('/genres/:title', (req, res) => {
-  res.json(genres.find((genre) =>
-    { return movie.genre === req.params.title }));
-});
-// Gets data about a director by name
-app.get('/directors/:name', (req, res) => {
-  res.json(directors.find((director) =>
-    { return movie.director === req.params.name }));
+  Movies.find()
+    .then((movies) => {
+      res.status(201).json(movies);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Adds a movie to the list of favorites
-app.post('/favorites', (req, res) => {
-  let movie = req.body;
-
-  if (!movie.title) {
-    const message = 'Missing "title" in request body';
-    res.status(400).send(message);
-  } else {
-    movie.id = uuid.v4();
-    movies.push(movie);
-    res.status(201).send(movie);
-  }
-});
-// Deletes a movie from the list of favorites
-app.delete('/favorites/:id', (req, res) => {
-  let movie = movies.find((movie) => { return movie.id === req.params.id });
-
-  if (movie) {
-    movies = movies.filter((obj) => { return obj.id !== req.params.id });
-    res.status(201).send('Movie ' + req.params.id + ' was deleted.');
-  }
+// Gets a single movie data by Title
+app.get('/movies/:Title', (req, res) => {
+  Movies.findOne({ Title: req.params.Title })
+    .then((movie) => {
+      res.json(movie);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Deletes a user from our list by ID
-app.delete('/unregister', (req, res) => {
-  let user = users.find((user) => { return user.id === req.params.delete });
-
-  if (user) {
-    users = users.filter((obj) => { return obj.id !== req.params.delete });
-    res.status(201).send('User ' + req.params.id + ' was deleted.');
-  }
+// Returns data about a genre (description) by name/title (e.g., “Thriller”)
+app.get('/genre/:Name', (req, res) => {
+  Genres.findOne({ Name: req.params.Name })
+    .then((genre) => {
+      res.json(genre.Description);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Update the "user info" of a existing user by user name, password, email, date of birth
-app.put('/users/:name/:password/:email/:dateOfBirth', (req, res) => {
-  let user = users.find((user) => { return user.name === req.params.name });
-
-  if (user) {
-    user.classes[req.params.class] = parseInt(req.params.grade);
-    res.status(201).send(req.params.name + req.params.password + req.params.email + req.params.dateOfBirth + ' have been updated.');
-  } else {
-    res.status(404).send('User with the name ' + req.params.name + ' was not found.');
-  }
+// Returns data about a director (bio, birth year, death year) by name
+app.get('/directors/:Name', (req, res) => {
+  Directors.findOne({ Name: req.params.Name })
+    .then((director) => {
+      res.json(director);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
 });
 
-// Allow new users to register
-app.delete('/register', (req, res) => {
-  let user = users.find((user) => { return user.id === req.params.register });
-
-  if (user) {
-    users = users.filter((obj) => { return obj.id == req.params.register });
-    res.status(201).send('User ' + req.params.id + ' was successfully registered.');
-  }
+// Allows users to add a movie to their list of favorites
+app.post('/users/:Username/Movies/:MovieID', (req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username }, {
+     $push: { FavoriteMovies: req.params.MovieID }
+   },
+   { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.json(updatedUser);
+    }
+  });
 });
 
+// Allow users to remove a movie from their list of favorites
+app.delete('/users/:Username/Movies/:MovieID', (req, res) => {
+  Users.findOneAndRemove({ Username: req.params.Username }, {
+     $pull: { FavoriteMovies: req.params.MovieID }
+   },
+   { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.json(updatedUser);
+    }
+  });
+});
 
+// Get all users
+app.get('/users', function (req,res){
+  Users.find()
+  .then(function (users){
+    res.status(201).json(users);
+  })
+  .catch(function(err){
+    console.error(err);
+    res.status(500).send('Error' + err);
+  });
+});
 
+// Allows existing users to deregister
+app.delete('/users/:Username', (req, res) => {
+  Users.findOneAndRemove({ Username: req.params.Username })
+    .then((user) => {
+      if (!user) {
+        res.status(400).send(req.params.Username + ' was not found');
+      } else {
+        res.status(200).send(req.params.Username + ' was deleted.');
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    });
+});
+
+// Allows to change users username
+app.put('/users/:Username', (req, res) => {
+  Users.findOneAndUpdate({ Username: req.params.Username }, { $set:
+    {
+      Username: req.body.Username,
+      Password: req.body.Password,
+      Email: req.body.Email,
+      Birthday: req.body.Birthday
+    }
+  },
+  { new: true }, // This line makes sure that the updated document is returned
+  (err, updatedUser) => {
+    if(err) {
+      console.error(err);
+      res.status(500).send('Error: ' + err);
+    } else {
+      res.json(updatedUser);
+    }
+  });
+});
+
+// Allow new user to register
+app.post('/users', (req, res) => {
+  Users.findOne({ Username: req.body.Username })
+    .then((user) => {
+      if (user) {
+        return res.status(400).send(req.body.Username + 'already exists');
+      } else {
+        Users
+          .create({
+            Username: req.body.Username,
+            Password: req.body.Password,
+            Email: req.body.Email,
+            Birthday: req.body.Birthday,
+            FavoriteMovies: [req.body.FavoriteMovies]
+          })
+          .then((user) => {res.status(201).json(user) })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).send('Error: ' + error);
+        });
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error: ' + error);
+    });
+})
+
+// Access documentation.html using express.static
 app.use(express.static('public'));
 
-// error handling
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');

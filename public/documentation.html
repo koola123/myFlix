@@ -86,66 +86,216 @@ th {
   </tr>
   <tr>
     <td>Get a list of ALL movies</td>
-    <td>/movies</td>
+    <td>app.get('/movies', (req, res) => {
+      Movies.find()
+        .then((movies) => {
+          res.status(201).json(movies);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        });
+    });</td>
     <td>GET</td>
-    <td>NONE</td>
-    <td>JSON object holding data about all movies.</td>
+    <td>[
+    {
+        "Genre": {
+            "Name": "Drama",
+            "Description": "Drama Films are serious presentations or stories with settings or life situations that portray realistic characters in conflict with either themselves, others, or forces of nature. A dramatic film shows us human beings at their best, their worst, and everything in-between."
+        },
+        "Director": {
+            "Name": "John H. Lee",
+            "Bio": "John H. Lee's films are imbued with top-notch cosmopolitan sensibilities. He has become one of the most sought after directors in all of East Asia and is a member of the rising generation of international directors from the region, having both a distinct voice as an auteur and wide commercial appeal with diverse genres of films.",
+            "Birth": "1971-01-01T00:00:00.000Z"
+        },
+        "_id": "60d895ef5fb84fd89007bda2",
+        "Title": "A Moment to Remember",
+        "Description": "Update A young couple's enduring love is tested when 27-year-old Su-jin is diagnosed with a rare form of Alzheimer's disease.",
+        "ImagePath": "amomenttoremember.png",
+        "Featured": true
+    },</td>
+    <td>Delivers a JSON object holding data about all movies.</td>
   </tr>
   <tr>
-    <td>Get data about single movie</td>
-    <td>/movies/[Description]/[Genre]/[Director]/[Image URL]</td>
+    <td>Get data about a single movie</td>
+    <td>app.get('/movies/:Title', (req, res) => {
+      Movies.findOne({ Title: req.params.Title })
+        .then((movie) => {
+          res.json(movie);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        });
+    });</td>
     <td>GET</td>
-    <td>NONE</td>
-    <td>JSON object holding data about a single movie.</td>
+    <td>{
+    "Genre": {
+        "Name": "Crime-Drama",
+        "Description": "Crime dramas are films that focus on the moral dilemmas of criminals. They differ from crime thrillers as the films generally focus on a more grim and realistic portrayal of the criminal world over violence and gunplay sequences."
+    },
+    "Director": {
+        "Name": "Bong Joon-ho",
+        "Bio": "Update the Biography",
+        "Birth": "1969-01-01T00:00:00.000Z"
+    },
+    "_id": "60d8967b5fb84fd89007bda4",
+    "Title": "Parasite",
+    "Description": "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+    "ImagePath": "parasite.png",
+    "Featured": true
+}</td>
+    <td>Delivers a JSON object holding data about a single movie.</td>
   </tr>
   <tr>
-    <td>Get genre by name or title</td>
-    <td>/movies/genre/[Description]</td>
+    <td>Get a movie genre by name or title</td>
+    <td>app.get('/genre/:Name', (req, res) => {
+      Genres.findOne({ Name: req.params.Name })
+        .then((genre) => {
+          res.json(genre.Description);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        });
+    });</td>
     <td>GET</td>
-    <td>NONE</td>
-    <td>JSON object holding data about a movie genre.</td>
+    <td>Another Object in JSON format.</td>
+    <td>Delivers a JSON object holding data about a movie genre.</td>
   </tr>
   <tr>
-    <td>Get data about a director</td>
-    <td>/movies/director/[Bio]/[Birth Year]/[Death Year]</td>
+    <td>Get data about a movie director</td>
+    <td>app.get('/directors/:Name', (req, res) => {
+      Directors.findOne({ Name: req.params.Name })
+        .then((director) => {
+          res.json(director);
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        });
+    });</td>
     <td>GET</td>
-    <td>NONE</td>
-    <td>JSON object holding data about a movie director.</td>
+    <td>Another Object in JSON format.</td>
+    <td>Delivers a JSON object holding data about a movie director.</td>
   </tr>
   <tr>
     <td>Register as a new user</td>
-    <td>/users/[ID]</td>
+    <td>app.post('/users', (req, res) => {
+      Users.findOne({ Username: req.body.Username })
+        .then((user) => {
+          if (user) {
+            return res.status(400).send(req.body.Username + 'already exists');
+          } else {
+            Users
+              .create({
+                Username: req.body.Username,
+                Password: req.body.Password,
+                Email: req.body.Email,
+                Birthday: req.body.Birthday,
+                FavoriteMovies: [req.body.FavoriteMovies]
+              })
+              .then((user) => {res.status(201).json(user) })
+            .catch((error) => {
+              console.error(error);
+              res.status(500).send('Error: ' + error);
+            });
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+          res.status(500).send('Error: ' + error);
+        });
+    })
+</td>
     <td>POST</td>
-    <td>---</td>
-    <td>TEXT MESSAGE that the user is registered now.</td>
+    <td>TEXT MESSAGE</td>
+    <td>Delivers a text message that the user ist registered now.</td>
   </tr>
   <tr>
     <td>Update personal information</td>
-    <td>/users/[ID]/[Username]/[Password]/[Email]/[Date of Birth]</td>
+    <td>app.put('/users/:Username', (req, res) => {
+      Users.findOneAndUpdate({ Username: req.params.Username }, { $set:
+        {
+          Username: req.body.Username,
+          Password: req.body.Password,
+          Email: req.body.Email,
+          Birthday: req.body.Birthday
+        }
+      },
+      { new: true }, // This line makes sure that the updated document is returned
+      (err, updatedUser) => {
+        if(err) {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        } else {
+          res.json(updatedUser);
+        }
+      });
+    });</td>
     <td>PUT</td>
-    <td>---</td>
-    <td>TEXT MESSAGE that the personal user information was updated.</td>
+    <td>JSON Object</td>
+    <td>Delivers a text message that the user has updated.</td>
   </tr>
   <tr>
-    <td>Add movies to favorites</td>
-    <td>/movies/[Favorites]</td>
+    <td>Add movies to favorite-movies-list</td>
+    <td>app.post('/users/:Username/Movies/:MovieID', (req, res) => {
+      Users.findOneAndUpdate({ Username: req.params.Username }, {
+         $push: { FavoriteMovies: req.params.MovieID }
+       },
+       { new: true }, // This line makes sure that the updated document is returned
+      (err, updatedUser) => {
+        if (err) {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        } else {
+          res.json(updatedUser);
+        }
+      });
+    });</td>
     <td>POST</td>
-    <td>---</td>
-    <td>TEXT MESSAGE that the selected movie was added to the favorites list.</td>
+    <td>JSON Object</td>
+    <td>Delivers an updated JSON Object of user favorites.</td>
   </tr>
   <tr>
-    <td>Remove movies from favorites</td>
-    <td>/movies/[Favorites]</td>
+    <td>Remove movies from favorite-movies-list</td>
+    <td>app.delete('/users/:Username/Movies/:MovieID', (req, res) => {
+      Users.findOneAndRemove({ Username: req.params.Username }, {
+         $pull: { FavoriteMovies: req.params.MovieID }
+       },
+       { new: true }, // This line makes sure that the updated document is returned
+      (err, updatedUser) => {
+        if (err) {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        } else {
+          res.json(updatedUser);
+        }
+      });
+    });</td>
     <td>DELETE</td>
-    <td>---</td>
-    <td>TEXT MESSAGE that the specified movie has been deleted.</td>
+    <td>JSON Object</td>
+    <td>Delivers an updated JSON Object of user favorites.</td>
   </tr>
   <tr>
     <td>Deregister</td>
-    <td>/users/[ID]</td>
+    <td>app.delete('/users/:Username', (req, res) => {
+      Users.findOneAndRemove({ Username: req.params.Username })
+        .then((user) => {
+          if (!user) {
+            res.status(400).send(req.params.Username + ' was not found');
+          } else {
+            res.status(200).send(req.params.Username + ' was deleted.');
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send('Error: ' + err);
+        });
+    });</td>
     <td>DELETE</td>
     <td>---</td>
-    <td>TEXT MESSAGE that the registered user has been deleted.</td>
+    <td>Text message that the user was deleted.</td>
   </tr>
 </table>
 </div>
