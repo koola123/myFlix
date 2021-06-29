@@ -19,6 +19,9 @@ mongoose.connect('mongodb://localhost:27017/myFlixDB', {useNewUrlParser: true, u
 
 app.use(morgan('common'));
 app.use(bodyParser.json());
+let auth = require('./auth')(app);
+const passport = require('passport');
+require('./passport');
 
 
 // Returns the welcome message from the root file
@@ -32,7 +35,7 @@ app.get('/documentation.html', (req, res) => {
 });
 
 // Gets all movies
-app.get('/movies', (req, res) => {
+app.get('/movies', passport.authenticate('jwt', {session: false}), (req, res) => {
   Movies.find()
     .then((movies) => {
       res.status(201).json(movies);
@@ -160,7 +163,7 @@ app.put('/users/:Username', (req, res) => {
   });
 });
 
-// Allow new user to register
+// Allow new users to register
 app.post('/users', (req, res) => {
   Users.findOne({ Username: req.body.Username })
     .then((user) => {
@@ -172,8 +175,7 @@ app.post('/users', (req, res) => {
             Username: req.body.Username,
             Password: req.body.Password,
             Email: req.body.Email,
-            Birthday: req.body.Birthday,
-            FavoriteMovies: [req.body.FavoriteMovies]
+            Birthday: req.body.Birthday
           })
           .then((user) => {res.status(201).json(user) })
         .catch((error) => {
