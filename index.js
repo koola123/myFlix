@@ -16,8 +16,9 @@ const Directors = Models.Director;
 const Genres = Models.Genre;
 
 
-//Connecting Moongoose to MongoDB external database as a sublayer
-mongoose.connect('mongodb://localhost:27017/myFlixDB', {useNewUrlParser: true, useUnifiedTopology: true});
+// Connecting Moongoose to MongoDB external database as a sublayer
+// mongoose.connect('mongodb://localhost:27017/myFlixDB', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect('process.env.CONNECTION_URI', {useNewUrlParser: true, useUnifiedTopology: true});
 
 const cors = require('cors');
 let allowedOrigins = ['http://localhost:8080', 'http://testsite.com'];
