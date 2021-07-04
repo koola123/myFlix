@@ -22,15 +22,18 @@ app.use(cors());
 
 let auth = require('./auth')(app);
 
+// LOCAL DATABASE ON PORT:8080
 // mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true});
+
+//REMOTE DATABASE ON HEROKU (Online-Host)
 mongoose.connect(process.env.CONNECTION_URI, {useNewUrlParser: true, useUnifiedTopology: true});
 
-// Default endpoint
+// ENTRY POINT WITH WELCOME MESSAGE
 app.get('/', (req, res) => {
-  res.send('Welcome to my K-movies filmstream!');
+  res.send('Welcome to K-ON, the korean movie filmstream!');
 });
 
-// Gets a list of ALL movies for the user
+// GETS A LIST OF ALL MOVIES
 app.get('/movies', passport.authenticate('jwt', {
   session: false
 }), (req, res) => {
@@ -44,7 +47,7 @@ app.get('/movies', passport.authenticate('jwt', {
     });
 });
 
-// Gets data about a single movie by title for the user
+// GETS DATA ABOUT A SINGLE MOVIE BY TITLE
 app.get('/movies/:Title', passport.authenticate('jwt', {session: false}), (req, res) => {
   Movies.findOne({
       Title: req.params.Title
@@ -58,7 +61,7 @@ app.get('/movies/:Title', passport.authenticate('jwt', {session: false}), (req, 
     });
 });
 
-// Gets data about a movie genre by title/name
+// GETS DATA ABOUT A MOVIE GENRE BY TITLE/NAME
 app.get('/movies/genres/:Name', passport.authenticate('jwt', {session: false}), (req, res) => {
   Movies.findOne({
       'Genre.Name': req.params.Name
@@ -72,7 +75,7 @@ app.get('/movies/genres/:Name', passport.authenticate('jwt', {session: false}), 
     })
 });
 
-// Gets data about a director (bio, birth year, death year) by name
+// GETS DATA ABOUT A DIRECTOR (BIO, BIRTHYEAR, DEATHYEAR) BY NAME
 app.get('/movies/directors/:Name', passport.authenticate('jwt', {session: false}), (req, res) => {
   Movies.findOne({
       'Director.Name': req.params.Name
@@ -86,7 +89,7 @@ app.get('/movies/directors/:Name', passport.authenticate('jwt', {session: false}
     })
 });
 
-//Add a user
+//ADDS A NEW USER
 /* We'll expect JSON in this format
 {
     ID: Integer,
@@ -105,7 +108,7 @@ app.post('/users',
     check('Email', 'Email does not appear to be valid').isEmail()
   ], (req, res) => {
 
-    // Check for erros
+// CHECKS FOR ANY ERRORS
     let errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -144,7 +147,7 @@ app.post('/users',
       });
   });
 
-// Adds a new user to the user list
+// ADDS A NEW USER TO THE USERS LIST
 app.put('/users/:Username', passport.authenticate('jwt', {
     session: false
   }),
@@ -157,7 +160,7 @@ app.put('/users/:Username', passport.authenticate('jwt', {
     check('Email', 'Email does not appear to be valid').isEmail()
   ], (req, res) => {
 
-    // Validation logic for request
+// VALIDATION LOGIC FOR REQUESTS
     let errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -189,7 +192,7 @@ app.put('/users/:Username', passport.authenticate('jwt', {
       });
   });
 
-// Adds a movie to a user's list of favorites
+// ADDS A MOVIE TO A USERS LIST OF FAVORITES
 app.post('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {session: false}), (req, res) => {
   Users.findOneAndUpdate({
       Username: req.params.Username
@@ -210,7 +213,7 @@ app.post('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {sessi
     });
 });
 
-// Removes a movie from a user's list of favorites
+// REMOVES A MOVIE FROM A USERS LIST OF FAVORITES
 app.delete('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {session: false}), (req, res) => {
   Users.findOneAndUpdate({
       Username: req.params.Username
@@ -231,7 +234,7 @@ app.delete('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {ses
     });
 });
 
-// Remove a user by username
+// REMOVE A USER BY USERNAME
 app.delete('/users/:Username', passport.authenticate('jwt', {session: false}), (req, res) => {
   Users.findOneAndRemove({
       Username: req.params.Username
@@ -249,13 +252,13 @@ app.delete('/users/:Username', passport.authenticate('jwt', {session: false}), (
     });
 });
 
-// General error-handler
+// ERROR-HANDLER
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
-// Listen for requests
+// LISTEN FOR REQUESTS
 const port = process.env.PORT || 8080;
 app.listen(port, '0.0.0.0', () => {
   console.log('Listening on port' + port);
