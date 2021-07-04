@@ -86,7 +86,9 @@ th {
   </tr>
   <tr>
     <td>Get a list of ALL movies</td>
-    <td>app.get('/movies', (req, res) => {
+    <td>app.get('/movies', passport.authenticate('jwt', {
+      session: false
+    }), (req, res) => {
       Movies.find()
         .then((movies) => {
           res.status(201).json(movies);
@@ -118,8 +120,10 @@ th {
   </tr>
   <tr>
     <td>Get data about a single movie</td>
-    <td>app.get('/movies/:Title', (req, res) => {
-      Movies.findOne({ Title: req.params.Title })
+    <td>app.get('/movies/:Title', passport.authenticate('jwt', {session: false}), (req, res) => {
+      Movies.findOne({
+          Title: req.params.Title
+        })
         .then((movie) => {
           res.json(movie);
         })
@@ -149,15 +153,17 @@ th {
   </tr>
   <tr>
     <td>Get a movie genre by name or title</td>
-    <td>app.get('/genre/:Name', (req, res) => {
-      Genres.findOne({ Name: req.params.Name })
-        .then((genre) => {
-          res.json(genre.Description);
+    <td>app.get('/movies/genres/:Name', passport.authenticate('jwt', {session: false}), (req, res) => {
+      Movies.findOne({
+          'Genre.Name': req.params.Name
+        })
+        .then((movie) => {
+          res.json(movie.Genre);
         })
         .catch((err) => {
           console.error(err);
           res.status(500).send('Error: ' + err);
-        });
+        })
     });</td>
     <td>GET</td>
     <td>Another Object in JSON format.</td>
@@ -213,45 +219,74 @@ th {
     <td>Delivers a text message that the user ist registered now.</td>
   </tr>
   <tr>
-    <td>Update personal information</td>
-    <td>app.put('/users/:Username', (req, res) => {
-      Users.findOneAndUpdate({ Username: req.params.Username }, { $set:
-        {
-          Username: req.body.Username,
-          Password: req.body.Password,
-          Email: req.body.Email,
-          Birthday: req.body.Birthday
+    <td>Update user's information</td>
+    <td>app.put('/users/:Username', passport.authenticate('jwt', {
+        session: false
+      }),
+      [
+        check('Username', 'Username is required').isLength({
+          min: 5
+        }),
+        check('Username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
+        check('Password', 'Password is required').not().isEmpty(),
+        check('Email', 'Email does not appear to be valid').isEmail()
+      ], (req, res) => {
+
+    // VALIDATION LOGIC FOR REQUESTS
+        let errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+          return res.status(422).json({
+            errors: errors.array()
+          });
         }
-      },
-      { new: true }, // This line makes sure that the updated document is returned
-      (err, updatedUser) => {
-        if(err) {
-          console.error(err);
-          res.status(500).send('Error: ' + err);
-        } else {
-          res.json(updatedUser);
-        }
-      });
-    });</td>
+
+        let hashedPassword = Users.hashPassword(req.body.Password);
+        Users.findOneAndUpdate({
+            Username: req.params.Username
+          }, {
+            $set: {
+              Username: req.body.Username,
+              Password: hashedPassword,
+              Email: req.body.Email,
+              Birthday: req.body.Birthday
+            }
+          }, {
+            new: true
+          },
+          (err, updatedUser) => {
+            if (err) {
+              console.error(err);
+              res.status(500).send('Error: ' + err);
+            } else {
+              res.json(updatedUser);
+            }
+          });
+      });</td>
     <td>PUT</td>
     <td>JSON Object</td>
     <td>Delivers a text message that the user has updated.</td>
   </tr>
   <tr>
     <td>Add movies to favorite-movies-list</td>
-    <td>app.post('/users/:Username/Movies/:MovieID', (req, res) => {
-      Users.findOneAndUpdate({ Username: req.params.Username }, {
-         $push: { FavoriteMovies: req.params.MovieID }
-       },
-       { new: true }, // This line makes sure that the updated document is returned
-      (err, updatedUser) => {
-        if (err) {
-          console.error(err);
-          res.status(500).send('Error: ' + err);
-        } else {
-          res.json(updatedUser);
-        }
-      });
+    <td>app.post('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {session: false}), (req, res) => {
+      Users.findOneAndUpdate({
+          Username: req.params.Username
+        }, {
+          $push: {
+            FavoriteMovies: req.params.MovieID
+          }
+        }, {
+          new: true
+        },
+        (err, updatedUser) => {
+          if (err) {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+          } else {
+            res.json(updatedUser);
+          }
+        });
     });</td>
     <td>POST</td>
     <td>JSON Object</td>
@@ -259,19 +294,24 @@ th {
   </tr>
   <tr>
     <td>Remove movies from favorite-movies-list</td>
-    <td>app.delete('/users/:Username/Movies/:MovieID', (req, res) => {
-      Users.findOneAndRemove({ Username: req.params.Username }, {
-         $pull: { FavoriteMovies: req.params.MovieID }
-       },
-       { new: true }, // This line makes sure that the updated document is returned
-      (err, updatedUser) => {
-        if (err) {
-          console.error(err);
-          res.status(500).send('Error: ' + err);
-        } else {
-          res.json(updatedUser);
-        }
-      });
+    <td>app.delete('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {session: false}), (req, res) => {
+      Users.findOneAndUpdate({
+          Username: req.params.Username
+        }, {
+          $pull: {
+            FavoriteMovies: req.params.MovieID
+          }
+        }, {
+          new: true
+        },
+        (err, updatedUser) => {
+          if (err) {
+            console.error(err);
+            res.status(500).send('Error: ' + err);
+          } else {
+            res.json(updatedUser);
+          }
+        });
     });</td>
     <td>DELETE</td>
     <td>JSON Object</td>
@@ -279,20 +319,23 @@ th {
   </tr>
   <tr>
     <td>Deregister</td>
-    <td>app.delete('/users/:Username', (req, res) => {
-      Users.findOneAndRemove({ Username: req.params.Username })
+    <td>app.delete('/users/:Username', passport.authenticate('jwt', {session: false}), (req, res) => {
+      Users.findOneAndRemove({
+          Username: req.params.Username
+        })
         .then((user) => {
           if (!user) {
             res.status(400).send(req.params.Username + ' was not found');
           } else {
-            res.status(200).send(req.params.Username + ' was deleted.');
+            res.status(200).send(req.params.Username + ' was deleted');
           }
         })
         .catch((err) => {
           console.error(err);
           res.status(500).send('Error: ' + err);
         });
-    });</td>
+    });
+</td>
     <td>DELETE</td>
     <td>---</td>
     <td>Text message that the user was deleted.</td>
