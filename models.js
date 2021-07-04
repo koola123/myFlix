@@ -1,5 +1,6 @@
 // Mongoose import function
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 // Defining schema for movies list
 let movieSchema = mongoose.Schema({
@@ -38,11 +39,7 @@ userSchema.methods.validatePassword = function(password) {
 //
 let Movie = mongoose.model('Movie', movieSchema);
 let User = mongoose.model('User', userSchema);
-let Director = mongoose.model('Director', movieSchema);
-let Genre = mongoose.model('Genre', movieSchema);
 
 // Exporting modules for use in index.js file
 module.exports.Movie = Movie;
 module.exports.User = User;
-module.exports.Director = Director;
-module.exports.Genre = Genre;
