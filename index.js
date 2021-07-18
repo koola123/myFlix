@@ -30,16 +30,18 @@ mongoose.connect(process.env.CONNECTION_URI, {useNewUrlParser: true, useUnifiedT
 
 // ENTRY POINT WITH WELCOME MESSAGE
 app.get('/', (req, res) => {
-  res.send('Welcome to K-ON, the korean movie filmstream!');
+  res.send('Welcome to K-Movies!');
 });
 
 // GETS A LIST OF ALL MOVIES
-app.get('/movies', function (req, res) {
+app.get('/movies', passport.authenticate('jwt', {
+  session: false
+}), (req, res) => {
   Movies.find()
-    .then(function(movies) {
+    .then((movies) => {
       res.status(201).json(movies);
     })
-    .catch(function(err) {
+    .catch((err) => {
       console.error(err);
       res.status(500).send('Error: ' + err);
     });
