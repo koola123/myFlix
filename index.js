@@ -212,7 +212,7 @@ app.post('/users/addtofavs/:Username//:MovieID', passport.authenticate('jwt', {s
 });
 
 // REMOVES A MOVIE FROM A USERS LIST OF FAVORITES
-app.delete('/users/:Username/movies/:MovieID', passport.authenticate('jwt', {session: false}), (req, res) => {
+app.delete('/users/removefromfavs/:Username/:MovieID', passport.authenticate('jwt', {session: false}), (req, res) => {
   Users.findOneAndUpdate({
       Username: req.params.Username
     }, {
