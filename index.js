@@ -250,6 +250,18 @@ app.delete('/users/:Username', passport.authenticate('jwt', {session: false}), (
     });
 });
 
+// GETS A LIST OF ALL USERS
+app.get('/users/', passport.authenticate('jwt', {session: false}), (req, res) => {
+  Users.find()
+  .then((users) => {
+    res.status(201).json(users);
+})
+.catch((err) => {
+  console.log(err);
+  res.status(500).send('Error: ' + err);
+  });
+});
+
 // ERROR-HANDLER
 app.use((err, req, res, next) => {
   console.error(err.stack);
