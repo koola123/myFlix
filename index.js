@@ -279,25 +279,7 @@ app.put('/users/:Username', [
 
   let hashedPassword = Users.hashPassword(req.body.Password);
 
-  Users.findOneAndUpdate({ Username: req.params.Username }, {
-    $set:
-    {
-      Username: req.body.Username,
-      Password: hashedPassword,
-      Email: req.body.Email,
-      Birthday: req.body.Birthday
-    }
-  },
-    { new: true },
-    (err, updatedUser) => {
-      if (err) {
-        console.error(err);
-        res.status(500).send('Error: ' + err);
-      } else {
-        res.json(updatedUser);
-      }
-    });
-});
+
 
 
 // GETS A LIST OF ALL USERS
