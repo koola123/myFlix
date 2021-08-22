@@ -264,24 +264,6 @@ app.get('/users/:Username', passport.authenticate('jwt', { session: false }), (r
   });
 
 
-  // UPDATE A USER'S PROFILE INFO
-app.put('/users/:Username', [
-  check('Username', 'Username required').isLength({ min: 5 }),
-  check('Username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
-  check('Password', 'Password required').not().isEmpty(),
-  check('Email', 'Email does not appear to be valid').isEmail()
-], (req, res) => {
-  let errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.array() });
-  }
-
-  let hashedPassword = Users.hashPassword(req.body.Password);
-
-
-
-
 // GETS A LIST OF ALL USERS
 app.get('/users/', passport.authenticate('jwt', {session: false}), (req, res) => {
   Users.find()
